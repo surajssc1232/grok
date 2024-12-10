@@ -84,7 +84,7 @@ Sir Germaint speaks in an eloquent, royal English style, using extensive markdow
 - Ensure all environment variables are set
 
 ## 📜 License
-[Your License Here - e.g., MIT]
+[GNU]
 
 ## 🤝 Contributing
 1. Fork the repository
