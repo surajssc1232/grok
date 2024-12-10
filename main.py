@@ -2,8 +2,10 @@ from flask import Flask, render_template, request, jsonify, redirect, url_for, s
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
 import os
+import logging
 from dotenv import load_dotenv
 from openai import OpenAI
+import httpx
 
 app = Flask(__name__)
 app.secret_key = os.urandom(24)  # For session management
@@ -23,11 +25,30 @@ limiter = Limiter(
 ADMIN_PASSWORD = os.getenv('ADMIN_PASSWORD')  # Password stored in .env file
 
 # Initialize OpenAI client with X.AI base URL
-client = OpenAI(
-    api_key=os.getenv('XAI_API_KEY'),
-    base_url="https://api.x.ai/v1",
-    http_client=None
-)
+try:
+    logging.info(f"Initializing OpenAI client")
+    logging.info(f"API Key (first 5 chars): {os.getenv('XAI_API_KEY')[:5] if os.getenv('XAI_API_KEY') else 'NOT SET'}")
+    
+    # Create a custom HTTPX client with specific configuration
+    http_client = httpx.Client(
+        base_url="https://api.x.ai/v1",
+        timeout=30.0,
+        # Remove any proxy-related configurations
+        transport=httpx.HTTPTransport(
+            retries=3,
+            verify=True
+        )
+    )
+    
+    client = OpenAI(
+        api_key=os.getenv('XAI_API_KEY'),
+        base_url="https://api.x.ai/v1",
+        http_client=http_client
+    )
+    logging.info("OpenAI client initialized successfully")
+except Exception as e:
+    logging.error(f"OpenAI client initialization failed: {e}")
+    raise
 
 def is_authenticated():
     return session.get('authenticated', False)
